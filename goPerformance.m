@@ -1,0 +1,53 @@
+addpath('vlfeat-0.9.19/toolbox/mex/mexa64');
+%addpath('vlfeat-0.9.19/toolbox/mex/mexw64');
+
+datasetFolder = '/scratch/kuenzlet/datasets';
+%datasetFolder = 'Data';
+resultFolder = '/scratch/kuenzlet/results';
+dataset = 'raw6';
+scaleFactor = 4;
+regionSize = round(30/scaleFactor)*scaleFactor;
+
+configurationBox = struct(...
+    'num', 1,...
+    'pen', 0,...
+    'minScore', 0.1,...
+    'verb', 1,...
+    'overwrite', 1);
+
+configurationStep1 = struct(...
+    'regionSize', regionSize, ...
+    'scaleFactor', scaleFactor, ...
+    'threshold', 0);
+
+configurationStep2 = struct('samplingFactor', 5);
+
+configurationDownsampling = struct('num', 20, 'factor', 0.95);
+configurationDict = struct(...
+    'upscaling', scaleFactor,...
+    'max_num', 5000000,...
+    'overwrite', 1,...
+    'scaling', configurationDownsampling);
+
+configurationUpsampling = struct(...
+    'upscaling', scaleFactor,...
+    'overwrite', 1);
+
+configurationUpsampling.description = 'improved6_0.95';
+configurationDict.dictname = 'improved6_0.95';
+
+configurationDict.writeout = 1; 
+configurationUpsampling.writeout = 1;
+
+images = fullfile(datasetFolder, dataset, 'imgs');
+properties = fullfile(datasetFolder, dataset, 'props');
+load(images);load(properties);%imgs=imgs(1:500:end);
+
+[imgs, props] = box_images(imgs, props, '/scratch/kuenzlet/datasets', configurationBox);
+[imgs, feat, props] = collectRegions(imgs, props, configurationStep1);
+[imgs, ~, props] = computeKmeans(imgs, feat, props,...
+        configurationStep2);
+imgs = matrixToCell(imgs, regionSize);
+conf = build_dic_knn_pi(imgs, props, '/scratch/kuenzlet/dict', configurationDict);
+upsampling_NNE(conf, resultFolder, 'Set5', '*.bmp',...
+        configurationUpsampling);

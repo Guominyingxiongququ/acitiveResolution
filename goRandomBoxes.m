@@ -1,0 +1,59 @@
+addpath('vlfeat-0.9.19/toolbox/mex/mexa64');
+%addpath('vlfeat-0.9.19/toolbox/mex/mexw64');
+
+datasetFolder = '/scratch/kuenzlet/datasets';
+resultFolder = '/scratch/kuenzlet/results';
+dataset = 'raw4';
+scaleFactor = 3;
+regionSize = round(30/scaleFactor)*scaleFactor;
+
+configurationStep1 = struct(...
+    'scaleFactor', scaleFactor,...
+    'threshold', 0,...
+    'regionSize', regionSize);
+
+configurationStep2 = struct('samplingFactor', 5);
+
+configurationBox = struct(...
+    'num', 1,...
+    'pen', 0,...
+    'minScore', 0.1,...
+    'verb', 1,...
+    'overwrite', 1);
+
+configurationDownsampling = struct('num', 1, 'factor', 1);
+configurationDict = struct(...
+    'upscaling', scaleFactor,...
+    'max_num', 500000,...
+    'overwrite', 1,...
+    'scaling', configurationDownsampling);
+
+configurationUpsampling = struct(...
+    'upscaling', scaleFactor,...
+    'overwrite', 1);
+
+images = fullfile(datasetFolder, dataset, 'imgs');
+properties = fullfile(datasetFolder, dataset, 'props');
+load(images);load(properties);
+%imgs = imgs(1:5:end);
+
+[imgB, propB] = box_images(imgs, props, '/scratch/kuenzlet/datasets', configurationBox);
+[imgB, featB, propB] = collectRegions(imgB, propB, configurationStep1);
+[imgB, ~, propB] = computeKmeans(imgB, featB, propB,...
+        configurationStep2);
+imgB = matrixToCell(imgB, regionSize);
+confB = build_dic_knn_pi(imgB, propB, '/scratch', configurationDict);
+scDet = upsampling_NNE(confB, resultFolder, 'Set5', '*.bmp',...
+        configurationUpsampling);
+
+scRand = zeros(1,10);
+for i = 1:10
+[imgBr, propBr] = box_imagesrand(imgs, props, '/scratch/kuenzlet/datasets', configurationBox);
+[imgBr, featBr, propBr] = collectRegions(imgBr, propBr, configurationStep1);
+[imgBr, ~, propBr] = computeKmeans(imgBr, featBr, propBr,...
+        configurationStep2);
+imgBr = matrixToCell(imgBr, regionSize);
+confBr = build_dic_knn_pi(imgBr, propBr, '/scratch', configurationDict);
+scRand(i) = upsampling_NNE(confBr, resultFolder, 'Set5', '*.bmp',...
+        configurationUpsampling);
+end

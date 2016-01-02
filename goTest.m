@@ -1,0 +1,56 @@
+addpath('vlfeat-0.9.20/toolbox/mex/mexa64');
+
+datasetFolder = 'scratch/kuenzlet/datasets';
+resultFolder = 'scratch/kuenzlet/results';
+dataset = 'raw4';
+scaleFactor = 3;
+regionSize = round(30/scaleFactor)*scaleFactor;
+
+configurationBox = struct(...
+    'num', 3,...
+    'pen', 0,...
+    'minScore', 0.1,...
+    'verb', 1,...
+    'overwrite', 1);
+
+configurationStep1 = struct(...
+    'scaleFactor', scaleFactor,...
+    'threshold', 0,...
+    'regionSize', regionSize,...
+    'samplingFactor', 1.6);
+
+% configurationStep2 = struct('samplingFactor', 5);
+% 
+% configurationDownsampling = struct('num', 20, 'factor', 0.95);
+% configurationDict = struct(...
+%     'upscaling', scaleFactor,...
+%     'max_num', 5000000,...
+%     'overwrite', 1,...
+%     'scaling', configurationDownsampling);
+% 
+% configurationUpsampling = struct(...
+%     'upscaling', scaleFactor,...
+%     'overwrite', 1);
+
+images = fullfile(datasetFolder, dataset, 'imgs');
+properties = fullfile(datasetFolder, dataset, 'props');
+load(images);load(properties);
+
+[boxImgs1, boxProps1] = box_images(imgs, props, 'scratch/kuenzlet/datasets', configurationBox);
+configurationBox.num = 5;
+[box2, boxProps2] = box_images(imgs, props, 'scratch/kuenzlet/datasets', configurationBox);
+[boxImgs1, ~, boxProps1] = collectRegions(boxImgs1, boxProps1, configurationStep1);
+% [boxImgs2, ~, boxProps2] = collectRegions(boxImgs2, boxProps2, configurationStep1);
+[imgs, ~, props] = collectRegions(imgs, props, configurationStep1);
+
+nbBoxImgs1 = size(boxImgs1, 2);
+nbBoxImgs2 = size(boxImgs1, 2);
+nbImgs = size(imgs, 2);
+
+% [imgs, feat, props] = computeKmeansPerImage(imgs, props, configurationStep1);
+% [imgs, ~, props] = computeKmeans(imgs, feat, props,...
+%         configurationStep2);
+% imgs = matrixToCell(imgs, regionSize);
+% conf = build_dic_knn_pi(imgs, props, '/scratch', configurationDict);
+% upsampling_NNE(conf, resultFolder, 'Set5', '*.bmp',...
+%         configurationUpsampling);
