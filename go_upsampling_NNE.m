@@ -6,7 +6,7 @@ function go_upsampling_NNE(conf_NNE_LH, input_dir, pattern)
 % [3] Jointly Optimized Regressors for Image Super-resolution, Eurographics 2015 
 
 addpath('methods');
-addpath('vlfeat-0.9.19\toolbox\mex\mexw64');
+addpath('vlfeat-0.9.20\toolbox\mex\mexw64');
 upscaling = 3; % the magnification factor x2, x3, x4...
 %input_dir = 'Set5'; % test dataset 
 %input_dir = 'Set14'; % Directory with input images from Set14 image dataset

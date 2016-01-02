@@ -1,6 +1,9 @@
-addpath('vlfeat-0.9.19/toolbox/mex/mexa64');
+addpath('vlfeat-0.9.20/toolbox/mex/mexa64');
 %addpath('vlfeat-0.9.19/toolbox/mex/mexw64');
 
+% dict?
+% input testSets?
+% NNE?
 dictFolder = '/scratch/kuenzlet/dict';
 resultFolder = '/scratch/kuenzlet/results';
 scaleFactor = 3;
@@ -19,6 +22,6 @@ dictpath = fullfile(dictFolder, dict, 'dict.mat');
 load(dictpath);
 
 for i = 1:numel(testSets)
-    upsampling_NNE(conf_NNE_LH, resultFolder, testSets{i}, endings{i},...
+    go_upsampling_NNE(conf_NNE_LH, resultFolder, testSets{i}, endings{i},...
     configurationUpsampling);
 end
